@@ -251,6 +251,9 @@ external_ids        : {hostname=standalone.ooo.test, ovn-bridge=br-int, ovn-brid
 ...
 ----
 In above example bridge mappings are set as "datacentre:br-ctlplane" and it has to be set in the OpenStackDataPlaneNodeSet CR also.
+
+* Modify the tlsEnabled attribute, depending on if the source environment enables TLS Everywhere.
+
 +
 [source,yaml]
 ----
