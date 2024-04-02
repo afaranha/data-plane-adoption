@@ -11,6 +11,11 @@ test-minimal:
 	mkdir -p tests/logs
 	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_VARS) -e @$(TEST_SECRETS) $(TEST_ARGS) tests/playbooks/test_minimal.yaml 2>&1 | tee $(TEST_OUTFILE)
 
+test-minimal-tls: TEST_OUTFILE := tests/logs/test_minimal_out_$(shell date +%FT%T%Z).log
+test-minimal-tls:
+	mkdir -p tests/logs
+	ANSIBLE_CONFIG=$(TEST_CONFIG) ansible-playbook -v -i $(TEST_INVENTORY) -e @$(TEST_VARS) -e @$(TEST_SECRETS) --tags tls_adoption tests/playbooks/test_minimal.yaml 2>&1 | tee $(TEST_OUTFILE)
+
 test-minimal-dataplane: TEST_OUTFILE := tests/logs/test_minimal_out_$(shell date +%FT%T%Z).log
 test-minimal-dataplane:
 	mkdir -p tests/logs
