@@ -21,7 +21,9 @@
     OS_CLOUD_NAME: "{{ os_cloud_name }}"
   ansible.builtin.shell:
     cmd: |
-      {{ shell_header }} token issue -f value -c id
+      {{ shell_header }}
+      alias openstack="ssh -i {{ edpm_privatekey_path }} root@${OS_CLOUD_IP} OS_CLOUD=${OS_CLOUD_NAME} openstack"
+      ${BASH_ALIASES[openstack]} token issue -f value -c id
   register: before_adoption_token
 
 - name: debug token
