@@ -96,6 +96,6 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    OS_TOKEN=${before_adoption_token}
+    OS_TOKEN=${before_adoption_token.stdout}
     alias openstack="oc exec -t openstackclient -- openstack"
     ${BASH_ALIASES[openstack]} endpoint list
