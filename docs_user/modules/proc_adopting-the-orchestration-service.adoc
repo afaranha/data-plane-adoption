@@ -13,7 +13,7 @@ the above mentioned servies.
 
 This guide also assumes that:
 
-. A `{OpenStackPreviousInstaller}` environment (the source Cloud) is running on one side;
+. A {OpenStackPreviousInstaller} environment (the source Cloud) is running on one side;
 . A {OpenShift} environment is running on the other side.
 
 .Prerequisites
@@ -72,7 +72,6 @@ spec:
       memcachedInstance: memcached
       passwordSelectors:
         authEncryptionKey: HeatAuthEncryptionKey
-        database: HeatDatabasePassword
         service: HeatPassword
 '
 ----
