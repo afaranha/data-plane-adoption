@@ -92,7 +92,7 @@
   ansible.builtin.debug:
     var: before_adoption_token
 
-- name: check that Keystone is reachable and its endpoints are defined
+- name: Verify that pre-adoption token still works
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
