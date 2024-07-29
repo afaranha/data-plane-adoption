@@ -96,6 +96,9 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    OS_TOKEN={{ before_adoption_token.stdout }}
-    alias openstack="oc exec -t openstackclient -- openstack"
-    ${BASH_ALIASES[openstack]} endpoint list
+    oc exec -n openstack -t openstackclient -- bash -c "curl -s -H \"X-Auth-Token: abc\" https://keystone-public-openstack.apps-crc.testing/v3/users"
+  register: adoption_token_result
+
+- name: debug adotion token result
+  ansible.builtin.debug:
+    var: adoption_token_result
