@@ -14,23 +14,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc patch openstackcontrolplane openstack --type=merge --patch '
-    spec:
-      heat:
-        enabled: true
-        apiOverride:
-          route: {}
-        template:
-          databaseInstance: openstack
-          databaseAccount: heat
-          secret: osp-secret
-          memcachedInstance: memcached
-          passwordSelectors:
-            authEncryptionKey: HeatAuthEncryptionKey
-            service: HeatPassword
-          rabbitMqClusterName: rabbitmq
-          serviceUser: heat
-    '
+    oc patch openstackcontrolplane openstack --type=merge --patch '{{ heat_patch }}'
 
 - name: wait for Heat to start up
   ansible.builtin.shell: |
@@ -52,5 +36,5 @@
     ${BASH_ALIASES[openstack]} stack list
   register: heat_responding_result
   until: heat_responding_result is success
-  retries: 15
+  retries: 60
   delay: 2

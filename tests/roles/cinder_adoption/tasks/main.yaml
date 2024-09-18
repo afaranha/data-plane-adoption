@@ -2,37 +2,7 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc patch openstackcontrolplane openstack --type=merge --patch '
-    spec:
-      cinder:
-        enabled: true
-        apiOverride:
-          route: {}
-        template:
-          databaseInstance: openstack
-          databaseAccount: cinder
-          secret: osp-secret
-          cinderAPI:
-            override:
-              service:
-                internal:
-                  metadata:
-                    annotations:
-                      metallb.universe.tf/address-pool: internalapi
-                      metallb.universe.tf/allow-shared-ip: internalapi
-                      metallb.universe.tf/loadBalancerIPs: 172.17.0.80
-                  spec:
-                    type: LoadBalancer
-          cinderBackup:
-            networkAttachments:
-            - storage
-            replicas: 0 # no backups by default
-          cinderVolumes:
-            volume1:
-              networkAttachments:
-              - storage
-              replicas: 0 # no volumes by default
-    '
+    oc patch openstackcontrolplane openstack --type=merge --patch '{{ cinder_scheduler_api_patch }}'
 
 - name: Deploy cinder-volume if necessary
   when: cinder_volume_backend | default('') != ''
@@ -46,13 +16,13 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc get pod --selector=component=cinder-scheduler -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
-    oc get pod --selector=component=cinder-api -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
-    [ -z "{{ cinder_volume_backend }}" ] || oc get pod --selector=component=cinder-volume -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
-    [ -z "{{ cinder_backup_backend }}" ] || oc get pod --selector=component=cinder-backup -o jsonpath='{.items[0].status.phase}{"\n"}' | grep Running
+    oc wait pod --for condition=Ready -l component=cinder-scheduler
+    oc wait pod --for condition=Ready -l component=cinder-api
+    [ -z "{{ cinder_volume_backend }}" ] || oc wait pod --for condition=Ready -l component=cinder-volume
+    [ -z "{{ cinder_backup_backend }}" ] || oc wait pod --for condition=Ready -l component=cinder-backup
   register: cinder_running_result
   until: cinder_running_result is success
-  retries: 180
+  retries: 60
   delay: 2
 
 # Give time for volume and backup services to initialize drivers, otherwise they
@@ -96,6 +66,36 @@
   until: cinder_running_result is success
   retries: 5
   delay: 2
+
+- name: Get cinder-backup down services
+  when: cinder_backup_backend != ''
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc exec -t openstackclient -- openstack volume service list --service cinder-backup --sort-column "Updated At" -c Host -f value | head -n -1
+  register: backup_down_services
+
+- name: Remove old cinder-backup service
+  when: cinder_backup_backend != ''
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc exec -t cinder-scheduler-0 -- cinder-manage service remove cinder-backup "{{ item }}"
+  loop: "{{ backup_down_services.stdout_lines }}"
+
+- name: Get cinder-scheduler down services
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc exec -t openstackclient -- openstack volume service list --service cinder-scheduler --sort-column "Updated At" -c Host -f value | head -n -1
+  register: scheduler_down_services
+
+- name: Remove old cinder-scheduler service
+  ansible.builtin.shell: |
+    {{ shell_header }}
+    {{ oc_header }}
+    oc exec -t cinder-scheduler-0 -- cinder-manage service remove cinder-scheduler "{{ item }}"
+  loop: "{{ scheduler_down_services.stdout_lines }}"
 
 - name: Cinder online data migrations
   ansible.builtin.shell: |

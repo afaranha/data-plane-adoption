@@ -1,3 +1,5 @@
+ifdef::context[:parent-context: {context}]
+
 [id="adopting-openstack-control-plane-services_{context}"]
 
 :context: adopt-control-plane
@@ -20,13 +22,14 @@ include::../modules/proc_adopting-the-placement-service.adoc[leveloffset=+1]
 
 include::../modules/proc_adopting-the-compute-service.adoc[leveloffset=+1]
 
-include::../assemblies/assembly_adopting-the-block-storage-service.adoc[leveloffset=+1]
+include::../modules/proc_adopting-the-block-storage-service.adoc[leveloffset=+1]
 
 include::../modules/proc_adopting-the-openstack-dashboard.adoc[leveloffset=+1]
 
 include::../assemblies/assembly_adopting-the-shared-file-systems-service.adoc[leveloffset=+1]
 
-include::../assemblies/assembly_adopting-the-bare-metal-provisioning-service.adoc[leveloffset=+1]
+//include::../assemblies/assembly_adopting-the-bare-metal-provisioning-service.adoc[leveloffset=+1]
+// bare metal is targeted for FP1.
 
 include::../modules/proc_adopting-the-orchestration-service.adoc[leveloffset=+1]
 
@@ -34,6 +37,9 @@ include::../modules/proc_adopting-telemetry-services.adoc[leveloffset=+1]
 
 include::../modules/proc_adopting-autoscaling.adoc[leveloffset=+1]
 
-include::assembly_reviewing-the-openstack-control-plane-configuration.adoc[leveloffset=+1]
+include::../modules/proc_pulling-configuration-from-a-tripleo-deployment.adoc[leveloffset=+1]
 
 include::../modules/proc_rolling-back-the-control-plane-adoption.adoc[leveloffset=+1]
+
+ifdef::parent-context[:context: {parent-context}]
+ifndef::parent-context[:!context:]

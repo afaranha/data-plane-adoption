@@ -62,11 +62,11 @@
   ansible.builtin.shell: |
     {{ shell_header }}
     {{ oc_header }}
-    oc wait --for condition=Ready pod/mariadb-copy-data --timeout=30s
+    oc wait --for condition=Ready pod/mariadb-copy-data --timeout=10s
   register: mariadb_data_pod_result
   until: mariadb_data_pod_result is success
-  retries: 5
-  delay: 6
+  retries: 25
+  delay: 2
 
 - name: check that the Galera database cluster members are online and synced
   no_log: "{{ use_no_log }}"
@@ -91,7 +91,9 @@
     . ~/.source_cloud_exported_variables
     {% endif %}
 
-    test -z "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK"  || [ "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK" = " " ]
+    test -z "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK"  || [ "$PULL_OPENSTACK_CONFIGURATION_MYSQLCHECK_NOK" = " " ] && echo "OK" || echo "CHECK FAILED"
+  register: result
+  failed_when: result.rc != 0 or 'CHECK FAILED' in result.stdout
 
 - name: test connection to podified DBs (show databases)
   no_log: "{{ use_no_log }}"

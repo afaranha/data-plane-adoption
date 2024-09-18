@@ -39,8 +39,8 @@ ${BASH_ALIASES[openstack]} flavor show m1.small || \
 ${BASH_ALIASES[openstack]} network show private || ${BASH_ALIASES[openstack]} network create private --share
 ${BASH_ALIASES[openstack]} subnet show priv_sub || ${BASH_ALIASES[openstack]} subnet create priv_sub --subnet-range 192.168.0.0/24 --network private
 ${BASH_ALIASES[openstack]} network show public || ${BASH_ALIASES[openstack]} network create public --external --provider-network-type flat --provider-physical-network datacentre
-${BASH_ALIASES[openstack]} subnet show pub_sub || \
-    ${BASH_ALIASES[openstack]} subnet create pub_sub --subnet-range 192.168.122.0/24 --allocation-pool start=192.168.122.200,end=192.168.122.210 --gateway 192.168.122.1 --no-dhcp --network public
+${BASH_ALIASES[openstack]} subnet show public_subnet || \
+    ${BASH_ALIASES[openstack]} subnet create public_subnet --subnet-range 192.168.122.0/24 --allocation-pool start=192.168.122.171,end=192.168.122.250 --gateway 192.168.122.1 --dhcp --network public
 ${BASH_ALIASES[openstack]} router show priv_router || {
     ${BASH_ALIASES[openstack]} router create priv_router
     ${BASH_ALIASES[openstack]} router add subnet priv_router priv_sub
@@ -67,22 +67,36 @@ export FIP=192.168.122.20
 # check connectivity via FIP
 ping -c4 ${FIP}
 
+# create bootable volume
 if ! ${BASH_ALIASES[openstack]} volume show disk ; then
-    ${BASH_ALIASES[openstack]} volume create --image cirros --bootable --size 1 disk
+    ${BASH_ALIASES[openstack]} volume create --image cirros --size 1 disk
     wait_for_status "volume show disk" "test volume 'disk' creation"
 fi
 
+# create volume backup
 if ! ${BASH_ALIASES[openstack]} volume backup show backup; then
     ${BASH_ALIASES[openstack]} volume backup create --name backup disk
     wait_for_status "volume backup show backup" "test volume 'disk' backup completion"
 fi
 
+# create volume snapshot
 if ! ${BASH_ALIASES[openstack]} volume snapshot show snapshot ; then
     ${BASH_ALIASES[openstack]} volume snapshot create --volume disk snapshot
-    wait_for_status "volume snapshot show snapshot" "test volume 'disk' backup snapshot availability"
+    wait_for_status "volume snapshot show snapshot" "test volume 'disk' snapshot availability"
 fi
 
 # Add volume to the test VM
 if ${BASH_ALIASES[openstack]} volume show disk -f json | jq -r '.status' | grep -q available ; then
     ${BASH_ALIASES[openstack]} server add volume test disk
+fi
+
+# create another bootable volume
+if ! ${BASH_ALIASES[openstack]} volume show boot-volume ; then
+    ${BASH_ALIASES[openstack]} volume create --image cirros --size 1 boot-volume
+    wait_for_status "volume show boot-volume" "test volume 'boot-volume' creation"
+fi
+
+# Launch an instance from boot-volume (BFV)
+if ${BASH_ALIASES[openstack]} volume show boot-volume -f json | jq -r '.status' | grep -q available ; then
+    ${BASH_ALIASES[openstack]} server create --flavor m1.small --volume boot-volume --nic net-id=private bfv-server --wait
 fi
