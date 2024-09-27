@@ -58,7 +58,9 @@ spec:
 
   keystone:
     enabled: false
-    template: {}
+    template:
+      token:
+        expiration: 360000
 
   manila:
     enabled: false
