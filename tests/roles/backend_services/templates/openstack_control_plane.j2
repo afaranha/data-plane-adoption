@@ -57,10 +57,8 @@ spec:
       ironicConductors: []
 
   keystone:
-    template:
-      customServiceConfig: |
-        [token]
-        expiration = 360000
+    enabled: false
+    template: {}
 
   manila:
     enabled: false
