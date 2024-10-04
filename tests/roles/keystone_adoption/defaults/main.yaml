@@ -6,9 +6,10 @@ keystone_patch: |
       apiOverride:
         route: {}
       template:
-        customConfigOverride: |
-          [token]
-          expiration = 360000
+        KeystoneAPI:
+          customServiceConfig
+            [token]
+            expiration = 360000
         override:
           service:
             internal:
